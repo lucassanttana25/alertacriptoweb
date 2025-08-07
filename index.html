@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta de Ativos B3</title>
+    
+    <!-- 1. Tailwind CSS para estilização rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. React e ReactDOM: O coração da nossa aplicação -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 3. Babel: Permite que o navegador entenda a sintaxe JSX do React -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { background-color: #f0f2f5; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+    
+        const API_URL = 'http://127.0.0.1:8000';
+
+        // --- Componentes da Interface ---
+
+        function LoginComponent({ onLoginSuccess, showRegister, showForgotPassword }) {
+            const [email, setEmail] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [error, setError] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+                const formData = new URLSearchParams();
+                formData.append('username', email);
+                formData.append('password', password);
+                try {
+                    const response = await fetch(`${API_URL}/auth/token`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData,
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Erro ao fazer login');
+                    onLoginSuccess(data.access_token);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Senha</label>
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div className="text-sm">
+                            <button type="button" onClick={showForgotPassword} className="font-medium text-indigo-600 hover:underline">
+                                Esqueceu a senha?
+                            </button>
+                        </div>
+                        {error && <p className="text-sm text-red-600">{error}</p>}
+                        <div>
+                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                                {loading ? 'Entrando...' : 'Entrar'}
+                            </button>
+                        </div>
+                    </form>
+                    <p className="text-sm text-center text-gray-600">
+                        Não tem uma conta?{' '}
+                        <button onClick={showRegister} className="font-medium text-indigo-600 hover:underline">
+                            Cadastre-se
+                        </button>
+                    </p>
+                </div>
+            );
+        }
+        
+        function RegisterComponent({ onRegisterSuccess, showLogin }) {
+            const [name, setName] = React.useState('');
+            const [email, setEmail] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [error, setError] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Erro ao registrar');
+                    onRegisterSuccess();
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold text-center text-gray-800">Criar Conta</h2>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Nome</label>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Senha</label>
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        {error && <p className="text-sm text-red-600">{error}</p>}
+                        <div>
+                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                                {loading ? 'Registrando...' : 'Registrar'}
+                            </button>
+                        </div>
+                    </form>
+                    <p className="text-sm text-center text-gray-600">
+                        Já tem uma conta?{' '}
+                        <button onClick={showLogin} className="font-medium text-indigo-600 hover:underline">
+                            Faça login
+                        </button>
+                    </p>
+                </div>
+            );
+        }
+
+        function ForgotPasswordComponent({ showLogin }) {
+            const [email, setEmail] = React.useState('');
+            const [message, setMessage] = React.useState('');
+            const [error, setError] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setMessage('');
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/password/forgot-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Erro ao solicitar recuperação');
+                    setMessage(data.message);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                 <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold text-center text-gray-800">Recuperar Senha</h2>
+                    <p className="text-sm text-center text-gray-600">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        {message && <p className="text-sm text-green-600">{message}</p>}
+                        {error && <p className="text-sm text-red-600">{error}</p>}
+                        <div>
+                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                                {loading ? 'Enviando...' : 'Enviar Link'}
+                            </button>
+                        </div>
+                    </form>
+                    <p className="text-sm text-center text-gray-600">
+                        Lembrou a senha?{' '}
+                        <button onClick={showLogin} className="font-medium text-indigo-600 hover:underline">
+                            Faça login
+                        </button>
+                    </p>
+                </div>
+            );
+        }
+
+        function ResetPasswordComponent({ token, showLogin }) {
+            const [password, setPassword] = React.useState('');
+            const [message, setMessage] = React.useState('');
+            const [error, setError] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setMessage('');
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/password/reset-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token, new_password: password }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Erro ao redefinir senha');
+                    setMessage(data.message + " Você já pode fazer login.");
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            return (
+                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold text-center text-gray-800">Crie uma Nova Senha</h2>
+                    {!message && (
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Nova Senha</label>
+                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                            </div>
+                            {error && <p className="text-sm text-red-600">{error}</p>}
+                            <div>
+                                <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                                    {loading ? 'Salvando...' : 'Salvar Nova Senha'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                    {message && <p className="text-sm text-green-600 text-center">{message}</p>}
+                     <p className="text-sm text-center text-gray-600">
+                        <button onClick={showLogin} className="font-medium text-indigo-600 hover:underline">
+                            Ir para Login
+                        </button>
+                    </p>
+                </div>
+            );
+        }
+
+        function CreateAlertForm({ token, onAlertCreated }) {
+            const [ticker, setTicker] = React.useState('');
+            const [tipo, setTipo] = React.useState('compra');
+            const [price, setPrice] = React.useState('');
+            const [error, setError] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/alerts`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            assetTicker: ticker.toUpperCase(),
+                            preco_alvo: parseFloat(price),
+                            tipo: tipo
+                        }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Erro ao criar alerta');
+                    
+                    onAlertCreated(data);
+                    setTicker('');
+                    setPrice('');
+
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="p-6 bg-gray-50 rounded-lg shadow-inner mt-6">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-700">Criar Novo Alerta</h3>
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div className="md:col-span-1">
+                            <label className="block text-sm font-medium text-gray-700">Ativo (ex: PETR4, BTC-USD)</label>
+                            <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div className="md:col-span-1">
+                            <label className="block text-sm font-medium text-gray-700">Alerta</label>
+                            <select value={tipo} onChange={e => setTipo(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="compra">Preço Abaixo de</option>
+                                <option value="venda">Preço Acima de</option>
+                            </select>
+                        </div>
+                        <div className="md:col-span-1">
+                             <label className="block text-sm font-medium text-gray-700">Preço Alvo</label>
+                            <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div className="md:col-span-1">
+                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                                {loading ? 'Criando...' : 'Criar Alerta'}
+                            </button>
+                        </div>
+                    </form>
+                    {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+                </div>
+            )
+        }
+        
+        // --- ATUALIZADO: Componente de preços com novo estilo e lógica ---
+        function LivePrices({ alerts, token }) {
+            const [prices, setPrices] = React.useState({});
+            const [previousPrices, setPreviousPrices] = React.useState({});
+            const [loading, setLoading] = React.useState(true);
+
+            React.useEffect(() => {
+                const fetchPrices = async () => {
+                    const activeAlerts = alerts.filter(a => a.ativo);
+                    if (activeAlerts.length === 0) {
+                        setPrices({});
+                        setLoading(false);
+                        return;
+                    }
+
+                    const tickers = [...new Set(activeAlerts.map(alert => alert.assetTicker))];
+                    
+                    try {
+                        const response = await fetch(`${API_URL}/market/prices`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(tickers)
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error('Erro ao buscar preços');
+
+                        setPreviousPrices(currentPrices => ({ ...currentPrices, ...prices }));
+                        setPrices(data);
+                    } catch (error) {
+                        console.error("Failed to fetch prices:", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                fetchPrices();
+                const intervalId = setInterval(fetchPrices, 60000);
+                return () => clearInterval(intervalId);
+            }, [alerts, token]);
+
+            const activeAlerts = alerts.filter(a => a.ativo);
+            if (activeAlerts.length === 0) {
+                return null;
+            }
+
+            return (
+                <div className="p-6 bg-white rounded-lg shadow-md mb-8">
+                    <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cotações Atuais</h3>
+                    {loading && Object.keys(prices).length === 0 ? <p className="text-gray-500">Buscando cotações...</p> : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {Object.entries(prices).map(([ticker, price]) => {
+                                const prevPrice = previousPrices[ticker];
+                                const priceChange = prevPrice ? price - prevPrice : 0;
+                                
+                                let colorClass = 'text-gray-800';
+                                let indicator = null;
+
+                                if (priceChange > 0) {
+                                    colorClass = 'text-green-600';
+                                    indicator = <span className="ml-1">▲</span>;
+                                } else if (priceChange < 0) {
+                                    colorClass = 'text-red-600';
+                                    indicator = <span className="ml-1">▼</span>;
+                                }
+
+                                return (
+                                    <div key={ticker} className="p-4 bg-gray-50 rounded-lg shadow-sm text-center transition-all duration-300 hover:shadow-md">
+                                        <p className="font-bold text-lg text-gray-900">{ticker}</p>
+                                        <p className={`text-2xl font-semibold ${colorClass} flex items-center justify-center`}>
+                                            {price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            {indicator}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function DashboardComponent({ token, onLogout }) {
+            const [user, setUser] = React.useState(null);
+            const [alerts, setAlerts] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState('');
+
+            const fetchAlerts = React.useCallback(async () => {
+                try {
+                    const response = await fetch(`${API_URL}/alerts`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Erro ao buscar alertas');
+                    setAlerts(data);
+                } catch (err) {
+                    setError(err.message);
+                }
+            }, [token]);
+            
+            const handleAlertCreated = (newAlert) => {
+                setAlerts(prevAlerts => [newAlert, ...prevAlerts]);
+            };
+
+            const handleDeleteAlert = async (alertId) => {
+                try {
+                    const response = await fetch(`${API_URL}/alerts/${alertId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.detail || 'Falha ao excluir alerta');
+                    }
+                    setAlerts(alerts.filter(alert => alert.id !== alertId));
+                } catch (err) {
+                     console.error(err.message);
+                }
+            };
+
+            React.useEffect(() => {
+                const fetchInitialData = async () => {
+                    setLoading(true);
+                    try {
+                        const userResponse = await fetch(`${API_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        if (!userResponse.ok) throw new Error('Sessão expirada. Faça login novamente.');
+                        const userData = await userResponse.json();
+                        setUser(userData);
+                        await fetchAlerts();
+                    } catch (err) {
+                        setError(err.message);
+                        onLogout();
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchInitialData();
+            }, [token, fetchAlerts, onLogout]);
+
+            if (loading) return <div className="text-center">Carregando...</div>;
+
+            return (
+                <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-md">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-gray-800">Bem-vindo, {user?.name}!</h2>
+                        <button onClick={onLogout} className="px-4 py-2 font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">
+                            Sair
+                        </button>
+                    </div>
+                    
+                    <LivePrices alerts={alerts} token={token} />
+                    
+                    <CreateAlertForm token={token} onAlertCreated={handleAlertCreated} />
+
+                    <div className="mt-8">
+                        <h3 className="text-2xl font-semibold mb-4 text-gray-700">Meus Alertas</h3>
+                        {alerts.length === 0 ? (
+                            <p className="text-gray-500">Você ainda não tem alertas.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white border border-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ativo</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alerta</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço Alvo</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {alerts.map(alert => (
+                                            <tr key={alert.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{alert.assetTicker}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">{alert.tipo === 'compra' ? 'Preço Abaixo de' : 'Preço Acima de'}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-600">R$ {alert.preco_alvo.toFixed(2)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                        alert.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                        {alert.ativo ? 'Ativo' : 'Inativo'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <button onClick={() => handleDeleteAlert(alert.id)} className="text-red-600 hover:text-red-900">
+                                                        Excluir
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [token, setToken] = React.useState(localStorage.getItem('authToken'));
+            const [view, setView] = React.useState('login');
+            const [resetToken, setResetToken] = React.useState(null);
+            const [registerSuccess, setRegisterSuccess] = React.useState(false);
+
+            React.useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const tokenFromUrl = params.get('token');
+                if (tokenFromUrl) {
+                    setResetToken(tokenFromUrl);
+                    setView('reset-password');
+                }
+            }, []);
+
+            const handleLoginSuccess = (newToken) => {
+                localStorage.setItem('authToken', newToken);
+                setToken(newToken);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('authToken');
+                setToken(null);
+                setView('login');
+            };
+            
+            const handleRegisterSuccess = () => {
+                setRegisterSuccess(true);
+                setView('login');
+            }
+
+            const showLogin = () => {
+                window.history.pushState({}, document.title, window.location.pathname);
+                setView('login');
+                setResetToken(null);
+            }
+
+            let content;
+            if (token) {
+                content = <DashboardComponent token={token} onLogout={handleLogout} />;
+            } else {
+                switch(view) {
+                    case 'register':
+                        content = <RegisterComponent onRegisterSuccess={handleRegisterSuccess} showLogin={showLogin} />;
+                        break;
+                    case 'forgot-password':
+                        content = <ForgotPasswordComponent showLogin={showLogin} />;
+                        break;
+                    case 'reset-password':
+                        content = <ResetPasswordComponent token={resetToken} showLogin={showLogin} />;
+                        break;
+                    default:
+                        content = <LoginComponent onLoginSuccess={handleLoginSuccess} showRegister={() => setView('register')} showForgotPassword={() => setView('forgot-password')} />;
+                }
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+                    <h1 className="text-4xl font-bold text-gray-800 mb-2">Alerta de Ativos B3</h1>
+                    <p className="text-gray-600 mb-8">Monitore seus ativos e receba notificações.</p>
+                    
+                    {registerSuccess && view === 'login' && (
+                        <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-md text-center">
+                            Cadastro realizado com sucesso! Faça o login para continuar.
+                        </div>
+                    )}
+
+                    {content}
+                </div>
+            );
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+
+    </script>
+
+</body>
+</html>
