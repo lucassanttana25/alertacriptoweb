@@ -1,12 +1,11 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 # 1. Adiciona a importação do novo roteador
-from routers import authentication, alerts, password_recovery, market_data
+from routers import authentication, alerts, password_recovery, market_data, reports
 import models
 import security
 from database import db
 from startup import create_indexes
-from routers import authentication, alerts, password_recovery, market_data, reports
 
 # Inicialização da aplicação FastAPI
 app = FastAPI(
