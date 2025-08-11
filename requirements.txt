@@ -7,3 +7,4 @@ passlib[bcrypt]
 python-dotenv
 pymongo
 fastapi-mail
+python-multipart
