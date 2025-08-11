@@ -7,6 +7,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+# Importa a função de envio de e-mail de alerta
+from email_service import send_alert_triggered_email
 
 load_dotenv()
 
@@ -17,6 +19,7 @@ DATABASE_NAME = os.getenv("DATABASE_NAME")
 client = AsyncIOMotorClient(MONGO_URI)
 db = client[DATABASE_NAME]
 alerts_collection = db.alerts
+users_collection = db.users # Adiciona referência à coleção de usuários
 
 print("Worker iniciado. Conectado ao MongoDB.")
 
@@ -44,21 +47,17 @@ async def check_alerts():
     print(f"Buscando cotações no Yahoo Finance para: {', '.join(yahoo_formatted_tickers)}")
     latest_prices = {}
     try:
-        # Adicionado auto_adjust=True para seguir as boas práticas da biblioteca
         data = yf.download(tickers=yahoo_formatted_tickers, period='1d', progress=False, auto_adjust=True)
         
         if not data.empty:
-            # --- CORREÇÃO: Lógica robusta para extrair preços ---
             close_prices = data['Close']
             
             if isinstance(close_prices, pd.Series):
-                # Caso de um único ticker: o resultado é uma Series
                 price = close_prices.iloc[-1]
                 if price is not None and not math.isnan(price):
                     original_ticker = yahoo_formatted_tickers[0].replace(".SA", "")
                     latest_prices[original_ticker] = price
             else: # pd.DataFrame
-                # Caso de múltiplos tickers: o resultado é um DataFrame
                 last_prices_row = close_prices.iloc[-1]
                 for ticker_col_name in last_prices_row.index:
                     price = last_prices_row[ticker_col_name]
@@ -86,6 +85,7 @@ async def check_alerts():
         target_price = alert['preco_alvo']
         tipo = alert['tipo']
         alert_id = alert['_id']
+        user_id = alert['userId']
 
         triggered = False
         if tipo == 'compra' and current_price < target_price:
@@ -97,6 +97,26 @@ async def check_alerts():
             print(f"--- ALERTA DISPARADO! ---")
             print(f"ID: {alert_id}, Ativo: {ticker}, Tipo: {tipo}, Preço Alvo: {target_price}, Preço Atual: {current_price}")
             
+            # --- LÓGICA DE ENVIO DE E-MAIL ---
+            # 1. Busca o e-mail do usuário no banco de dados
+            user_doc = await users_collection.find_one({"_id": user_id})
+            if user_doc and 'email' in user_doc:
+                recipient_email = user_doc['email']
+                alert_details = {
+                    "ticker": ticker,
+                    "tipo": tipo,
+                    "target_price": target_price,
+                    "current_price": current_price
+                }
+                # 2. Envia o e-mail de notificação
+                try:
+                    await send_alert_triggered_email(recipient_email, alert_details)
+                except Exception as e:
+                    print(f"ERRO CRÍTICO: Falha ao enviar e-mail de alerta para {recipient_email}. Erro: {e}")
+            else:
+                print(f"AVISO: Usuário com ID {user_id} não encontrado para envio de e-mail.")
+
+            # 3. Desativa o alerta para não disparar novamente
             await alerts_collection.update_one(
                 {"_id": alert_id},
                 {"$set": {"ativo": False}}

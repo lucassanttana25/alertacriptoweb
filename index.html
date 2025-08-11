@@ -327,7 +327,6 @@
             )
         }
         
-        // --- ATUALIZADO: Componente de preços com novo estilo e lógica ---
         function LivePrices({ alerts, token }) {
             const [prices, setPrices] = React.useState({});
             const [previousPrices, setPreviousPrices] = React.useState({});
@@ -411,6 +410,48 @@
             );
         }
 
+        // --- NOVO: Componente para o HUD de Top Ativos ---
+        function TopAssetsHUD() {
+            const [topAssets, setTopAssets] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+
+            React.useEffect(() => {
+                const fetchTopAssets = async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/reports/top-assets`);
+                        const data = await response.json();
+                        if (!response.ok) throw new Error('Erro ao buscar ranking');
+                        setTopAssets(data);
+                    } catch (error) {
+                        console.error("Failed to fetch top assets:", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchTopAssets();
+            }, []);
+
+            if (topAssets.length === 0) {
+                return null; // Não mostra nada se não houver dados
+            }
+
+            return (
+                <div className="p-6 bg-white rounded-lg shadow-md mb-8">
+                    <h3 className="text-2xl font-semibold mb-4 text-gray-800">Top 5 Ativos Monitorados</h3>
+                    {loading ? <p className="text-gray-500">Carregando ranking...</p> : (
+                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {topAssets.map((asset, index) => (
+                                <div key={asset.ativo} className="p-4 bg-gray-50 rounded-lg shadow-sm text-center">
+                                    <p className="font-bold text-lg text-gray-900">#{index + 1} {asset.ativo}</p>
+                                    <p className="text-indigo-600">{asset.total_alertas} alertas</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
         function DashboardComponent({ token, onLogout }) {
             const [user, setUser] = React.useState(null);
             const [alerts, setAlerts] = React.useState([]);
@@ -479,6 +520,9 @@
                             Sair
                         </button>
                     </div>
+                    
+                    {/* HUD de Top Ativos adicionado aqui */}
+                    <TopAssetsHUD />
                     
                     <LivePrices alerts={alerts} token={token} />
                     
