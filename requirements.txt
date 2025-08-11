@@ -8,3 +8,5 @@ python-dotenv
 pymongo
 fastapi-mail
 python-multipart
+yfinance
+pandas
