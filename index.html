@@ -1,35 +1,30 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alerta de Ativos B3</title>
-
+    
     <!-- 1. Tailwind CSS para estilização rápida -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <!-- 2. React e ReactDOM: O coração da nossa aplicação -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
+    
     <!-- 3. Babel: Permite que o navegador entenda a sintaxe JSX do React -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body {
-            background-color: #f0f2f5;
-        }
+        body { background-color: #f0f2f5; }
     </style>
 </head>
-
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-
+    
         const API_URL = 'https://alertacriptoweb.onrender.com';
-
 
         // --- Componentes da Interface ---
 
@@ -95,16 +90,29 @@
                 </div>
             );
         }
-
+        
+        // --- ATUALIZADO: Componente de Registro com Validação de Senha ---
         function RegisterComponent({ onRegisterSuccess, showLogin }) {
             const [name, setName] = React.useState('');
             const [email, setEmail] = React.useState('');
             const [password, setPassword] = React.useState('');
             const [error, setError] = React.useState('');
             const [loading, setLoading] = React.useState(false);
+            const [passwordError, setPasswordError] = React.useState('');
+
+            const handlePasswordChange = (e) => {
+                const newPassword = e.target.value;
+                setPassword(newPassword);
+                if (newPassword.length > 0 && newPassword.length < 6) {
+                    setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+                } else {
+                    setPasswordError('');
+                }
+            };
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
+                if (passwordError) return; // Impede o envio se a senha for inválida
                 setError('');
                 setLoading(true);
                 try {
@@ -137,11 +145,22 @@
                         </div>
                         <div>
                             <label className="text-sm font-medium text-gray-700">Senha</label>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                            <input 
+                                type="password" 
+                                value={password} 
+                                onChange={handlePasswordChange} 
+                                required 
+                                className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" 
+                            />
+                            {passwordError && <p className="text-sm text-red-600 mt-1">{passwordError}</p>}
                         </div>
                         {error && <p className="text-sm text-red-600">{error}</p>}
                         <div>
-                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                            <button 
+                                type="submit" 
+                                disabled={loading || passwordError} 
+                                className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed"
+                            >
                                 {loading ? 'Registrando...' : 'Registrar'}
                             </button>
                         </div>
@@ -184,7 +203,7 @@
             };
 
             return (
-                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                 <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                     <h2 className="text-2xl font-bold text-center text-gray-800">Recuperar Senha</h2>
                     <p className="text-sm text-center text-gray-600">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -236,7 +255,7 @@
                     setLoading(false);
                 }
             };
-
+            
             return (
                 <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                     <h2 className="text-2xl font-bold text-center text-gray-800">Crie uma Nova Senha</h2>
@@ -255,7 +274,7 @@
                         </form>
                     )}
                     {message && <p className="text-sm text-green-600 text-center">{message}</p>}
-                    <p className="text-sm text-center text-gray-600">
+                     <p className="text-sm text-center text-gray-600">
                         <button onClick={showLogin} className="font-medium text-indigo-600 hover:underline">
                             Ir para Login
                         </button>
@@ -290,7 +309,7 @@
                     });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.detail || 'Erro ao criar alerta');
-
+                    
                     onAlertCreated(data);
                     setTicker('');
                     setPrice('');
@@ -318,7 +337,7 @@
                             </select>
                         </div>
                         <div className="md:col-span-1">
-                            <label className="block text-sm font-medium text-gray-700">Preço Alvo</label>
+                             <label className="block text-sm font-medium text-gray-700">Preço Alvo</label>
                             <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div className="md:col-span-1">
@@ -331,7 +350,7 @@
                 </div>
             )
         }
-
+        
         function LivePrices({ alerts, token }) {
             const [prices, setPrices] = React.useState({});
             const [previousPrices, setPreviousPrices] = React.useState({});
@@ -347,7 +366,7 @@
                     }
 
                     const tickers = [...new Set(activeAlerts.map(alert => alert.assetTicker))];
-
+                    
                     try {
                         const response = await fetch(`${API_URL}/market/prices`, {
                             method: 'POST',
@@ -387,7 +406,7 @@
                             {Object.entries(prices).map(([ticker, price]) => {
                                 const prevPrice = previousPrices[ticker];
                                 const priceChange = prevPrice ? price - prevPrice : 0;
-
+                                
                                 let colorClass = 'text-gray-800';
                                 let indicator = null;
 
@@ -415,7 +434,6 @@
             );
         }
 
-        // --- NOVO: Componente para o HUD de Top Ativos ---
         function TopAssetsHUD() {
             const [topAssets, setTopAssets] = React.useState([]);
             const [loading, setLoading] = React.useState(true);
@@ -437,14 +455,14 @@
             }, []);
 
             if (topAssets.length === 0) {
-                return null; // Não mostra nada se não houver dados
+                return null;
             }
 
             return (
                 <div className="p-6 bg-white rounded-lg shadow-md mb-8">
                     <h3 className="text-2xl font-semibold mb-4 text-gray-800">Top 5 Ativos Monitorados</h3>
                     {loading ? <p className="text-gray-500">Carregando ranking...</p> : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {topAssets.map((asset, index) => (
                                 <div key={asset.ativo} className="p-4 bg-gray-50 rounded-lg shadow-sm text-center">
                                     <p className="font-bold text-lg text-gray-900">#{index + 1} {asset.ativo}</p>
@@ -475,7 +493,7 @@
                     setError(err.message);
                 }
             }, [token]);
-
+            
             const handleAlertCreated = (newAlert) => {
                 setAlerts(prevAlerts => [newAlert, ...prevAlerts]);
             };
@@ -492,7 +510,7 @@
                     }
                     setAlerts(alerts.filter(alert => alert.id !== alertId));
                 } catch (err) {
-                    console.error(err.message);
+                     console.error(err.message);
                 }
             };
 
@@ -525,12 +543,11 @@
                             Sair
                         </button>
                     </div>
-
-                    {/* HUD de Top Ativos adicionado aqui */}
+                    
                     <TopAssetsHUD />
-
+                    
                     <LivePrices alerts={alerts} token={token} />
-
+                    
                     <CreateAlertForm token={token} onAlertCreated={handleAlertCreated} />
 
                     <div className="mt-8">
@@ -556,8 +573,9 @@
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">{alert.tipo === 'compra' ? 'Preço Abaixo de' : 'Preço Acima de'}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-600">R$ {alert.preco_alvo.toFixed(2)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${alert.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                                        }`}>
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                        alert.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                                    }`}>
                                                         {alert.ativo ? 'Ativo' : 'Inativo'}
                                                     </span>
                                                 </td>
@@ -602,7 +620,7 @@
                 setToken(null);
                 setView('login');
             };
-
+            
             const handleRegisterSuccess = () => {
                 setRegisterSuccess(true);
                 setView('login');
@@ -618,7 +636,7 @@
             if (token) {
                 content = <DashboardComponent token={token} onLogout={handleLogout} />;
             } else {
-                switch (view) {
+                switch(view) {
                     case 'register':
                         content = <RegisterComponent onRegisterSuccess={handleRegisterSuccess} showLogin={showLogin} />;
                         break;
@@ -637,7 +655,7 @@
                 <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
                     <h1 className="text-4xl font-bold text-gray-800 mb-2">Alerta de Ativos B3</h1>
                     <p className="text-gray-600 mb-8">Monitore seus ativos e receba notificações.</p>
-
+                    
                     {registerSuccess && view === 'login' && (
                         <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-md text-center">
                             Cadastro realizado com sucesso! Faça o login para continuar.
@@ -656,5 +674,4 @@
     </script>
 
 </body>
-
 </html>
