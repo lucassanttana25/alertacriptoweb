@@ -5,18 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alerta de Ativos B3</title>
     
-    <!-- 1. Tailwind CSS para estilização rápida -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 2. React e ReactDOM: O coração da nossa aplicação -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- 3. Babel: Permite que o navegador entenda a sintaxe JSX do React -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
         body { background-color: #f0f2f5; }
+
+        /* Estilos para a Esteira de Ativos */
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background-color: #1a202c; /* Fundo escuro */
+            padding: 0.75rem 0; /* Fino (12px) */
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .ticker-move {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            /* CORREÇÃO: Animação ajustada para 30s para um início mais rápido */
+            animation: ticker 30s linear infinite;
+        }
+        .ticker-item {
+            margin: 0 2rem;
+            font-size: 1rem; /* 16px */
+        }
+        .ticker-item .asset {
+            font-weight: 600;
+            color: #fBBF24; /* Amarelo */
+        }
+        .ticker-item .alerts {
+            color: #A0AEC0; /* Cinza claro */
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .ticker-wrap:hover .ticker-move {
+            animation-play-state: paused;
+        }
     </style>
 </head>
 <body>
@@ -91,7 +121,6 @@
             );
         }
         
-        // --- ATUALIZADO: Componente de Registro com Validação de Senha ---
         function RegisterComponent({ onRegisterSuccess, showLogin }) {
             const [name, setName] = React.useState('');
             const [email, setEmail] = React.useState('');
@@ -112,7 +141,7 @@
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
-                if (passwordError) return; // Impede o envio se a senha for inválida
+                if (passwordError) return;
                 setError('');
                 setLoading(true);
                 try {
@@ -434,9 +463,8 @@
             );
         }
 
-        function TopAssetsHUD() {
+        function TopAssetsTicker() {
             const [topAssets, setTopAssets] = React.useState([]);
-            const [loading, setLoading] = React.useState(true);
 
             React.useEffect(() => {
                 const fetchTopAssets = async () => {
@@ -444,11 +472,9 @@
                         const response = await fetch(`${API_URL}/reports/top-assets`);
                         const data = await response.json();
                         if (!response.ok) throw new Error('Erro ao buscar ranking');
-                        setTopAssets(data);
+                        setTopAssets([...data, ...data]); 
                     } catch (error) {
                         console.error("Failed to fetch top assets:", error);
-                    } finally {
-                        setLoading(false);
                     }
                 };
                 fetchTopAssets();
@@ -459,18 +485,15 @@
             }
 
             return (
-                <div className="p-6 bg-white rounded-lg shadow-md mb-8">
-                    <h3 className="text-2xl font-semibold mb-4 text-gray-800">Top 5 Ativos Monitorados</h3>
-                    {loading ? <p className="text-gray-500">Carregando ranking...</p> : (
-                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {topAssets.map((asset, index) => (
-                                <div key={asset.ativo} className="p-4 bg-gray-50 rounded-lg shadow-sm text-center">
-                                    <p className="font-bold text-lg text-gray-900">#{index + 1} {asset.ativo}</p>
-                                    <p className="text-indigo-600">{asset.total_alertas} alertas</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div className="ticker-wrap">
+                    <div className="ticker-move">
+                        {topAssets.map((asset, index) => (
+                            <div key={index} className="ticker-item">
+                                <span className="asset">{asset.ativo}</span>
+                                <span className="alerts"> ({asset.total_alertas} alertas)</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         }
@@ -544,7 +567,7 @@
                         </button>
                     </div>
                     
-                    <TopAssetsHUD />
+                    <TopAssetsTicker />
                     
                     <LivePrices alerts={alerts} token={token} />
                     
