@@ -2,18 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from typing import List
 from datetime import datetime
 from bson import ObjectId
+import json
 
 import models
 import security
-from database import db
+# Importa o cliente Redis da nossa configuração
+from database import db, redis_client
 
 router = APIRouter()
 
 @router.post("", status_code=201, response_model=models.AlertaNovoPublic)
 async def criar_alerta(data: models.AlertaNovoCreate, current_user: models.UserInDB = Depends(security.get_current_user)):
-    """
-    Cria um novo alerta para o usuário logado.
-    """
     user_id = current_user.id
     asset_ticker = data.assetTicker.upper()
     
@@ -32,6 +31,13 @@ async def criar_alerta(data: models.AlertaNovoCreate, current_user: models.UserI
     result = await db.alerts.insert_one(alert_document)
     created_doc = await db.alerts.find_one({"_id": result.inserted_id})
 
+    # --- CACHE: Invalidação ---
+    # Após criar um novo alerta, removemos o cache antigo para forçar uma nova busca no banco e substituir.
+    if redis_client:
+        cache_key = f"alerts:{str(user_id)}"
+        redis_client.delete(cache_key)
+        print(f"Cache invalidado para o usuário: {user_id}")
+    
     # Constrói a resposta manualmente para garantir que o ID seja uma string.
     return {
         "id": str(created_doc["_id"]),
@@ -44,11 +50,23 @@ async def criar_alerta(data: models.AlertaNovoCreate, current_user: models.UserI
 
 @router.get("", response_model=List[models.AlertaNovoPublic])
 async def ler_alertas_do_usuario(current_user: models.UserInDB = Depends(security.get_current_user)):
-    user_id = current_user.id
-    alertas_cursor = db.alerts.find({'userId': user_id})
+    user_id = str(current_user.id)
+    cache_key = f"alerts:{user_id}"
+
+    # --- CACHE: Leitura ---
+    if redis_client:
+        try:
+            cached_alerts = redis_client.get(cache_key)
+            if cached_alerts:
+                print(f"Cache HIT para o usuário: {user_id}")
+                return json.loads(cached_alerts)
+        except Exception as e:
+            print(f"Erro ao acessar o cache Redis: {e}")
+
+    print(f"Cache MISS para o usuário: {user_id}. Buscando no MongoDB.")
+    alertas_cursor = db.alerts.find({'userId': current_user.id})
     alertas_db = await alertas_cursor.to_list(length=None)
     
-    # Constrói a lista de resposta manualmente para garantir que os IDs sejam strings.
     response_list = []
     for doc in alertas_db:
         try:
@@ -62,6 +80,15 @@ async def ler_alertas_do_usuario(current_user: models.UserInDB = Depends(securit
             })
         except KeyError:
             continue
+    
+    # ---CACHE: Escrita ---
+    if redis_client:
+        try:
+            alerts_json = json.dumps(response_list, default=str)
+            redis_client.set(cache_key, alerts_json, ex=3600) # Expira em 1 hora
+            print(f"Cache populado para o usuário: {user_id}")
+        except Exception as e:
+            print(f"Erro ao salvar no cache Redis: {e}")
             
     return response_list
 
@@ -78,14 +105,10 @@ async def deletar_alerta(alert_id: str, current_user: models.UserInDB = Depends(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Alerta não encontrado ou não pertence ao usuário.")
     
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    # --- LÓGICA DE CACHE: Invalidação ---
+    if redis_client:
+        cache_key = f"alerts:{str(user_id)}"
+        redis_client.delete(cache_key)
+        print(f"Cache invalidado para o usuário: {user_id}")
 
-@router.post("/registrar-dispositivo", status_code=201, tags=["Dispositivos"])
-async def registrar_dispositivo(data: models.Dispositivo, current_user: models.UserInDB = Depends(security.get_current_user)):
-    user_id = current_user.id
-    await db.dispositivos.update_one(
-        {'token': data.token},
-        {'$set': {'userId': user_id, 'registrado_em': datetime.utcnow()}},
-        upsert=True
-    )
-    return {"mensagem": "Dispositivo registrado com sucesso."}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

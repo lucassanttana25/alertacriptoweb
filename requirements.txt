@@ -10,3 +10,4 @@ fastapi-mail
 python-multipart
 yfinance
 pandas
+redis
