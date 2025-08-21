@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alerta de Ativos B3</title>
+    <title>Alert.</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body { background-color: #f0f2f5; }
+        body { background-color: #111827; }
 
         /* Estilos para a Esteira de Ativos */
         .ticker-wrap {
@@ -26,7 +26,6 @@
             display: inline-flex;
             align-items: center;
             white-space: nowrap;
-            /* CORREÇÃO: Animação ajustada para 30s para um início mais rápido */
             animation: ticker 30s linear infinite;
         }
         .ticker-item {
@@ -92,11 +91,11 @@
                     <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <label className="text-sm font-medium text-gray-400">Email</label>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Senha</label>
+                            <label className="text-sm font-medium text-gray-400">Senha</label>
                             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div className="text-sm">
@@ -165,15 +164,15 @@
                     <h2 className="text-2xl font-bold text-center text-gray-800">Criar Conta</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Nome</label>
+                            <label className="text-sm font-medium text-gray-400">Nome</label>
                             <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <label className="text-sm font-medium text-gray-400">Email</label>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Senha</label>
+                            <label className="text-sm font-medium text-gray-400">Senha</label>
                             <input 
                                 type="password" 
                                 value={password} 
@@ -237,7 +236,7 @@
                     <p className="text-sm text-center text-gray-600">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <label className="text-sm font-medium text-gray-400">Email</label>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         {message && <p className="text-sm text-green-600">{message}</p>}
@@ -291,7 +290,7 @@
                     {!message && (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Nova Senha</label>
+                                <label className="text-sm font-medium text-gray-400">Nova Senha</label>
                                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                             </div>
                             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -351,23 +350,23 @@
             };
 
             return (
-                <div className="p-6 bg-gray-50 rounded-lg shadow-inner mt-6">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-700">Criar Novo Alerta</h3>
+                <div className="p-6 bg-gray-900/50 rounded-lg shadow-inner mt-6 border border-gray-700">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-200">Criar Novo Alerta</h3>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div className="md:col-span-1">
-                            <label className="block text-sm font-medium text-gray-700">Ativo (ex: PETR4, BTC-USD)</label>
-                            <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                            <label className="block text-sm font-medium text-gray-400">Ativo (ex: PETR4, BTC-USD)</label>
+                            <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div className="md:col-span-1">
-                            <label className="block text-sm font-medium text-gray-700">Alerta</label>
+                            <label className="block text-sm font-medium text-gray-400">Alerta</label>
                             <select value={tipo} onChange={e => setTipo(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="compra">Preço Abaixo de</option>
                                 <option value="venda">Preço Acima de</option>
                             </select>
                         </div>
                         <div className="md:col-span-1">
-                             <label className="block text-sm font-medium text-gray-700">Preço Alvo</label>
-                            <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                             <label className="block text-sm font-medium text-gray-400">Preço Alvo</label>
+                            <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div className="md:col-span-1">
                             <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
@@ -429,7 +428,7 @@
 
             return (
                 <div className="p-6 bg-white rounded-lg shadow-md mb-8">
-                    <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cotações Atuais</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-gray-200">Cotações Atuais</h3>
                     {loading && Object.keys(prices).length === 0 ? <p className="text-gray-500">Buscando cotações...</p> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {Object.entries(prices).map(([ticker, price]) => {
@@ -559,9 +558,9 @@
             if (loading) return <div className="text-center">Carregando...</div>;
 
             return (
-                <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-md">
+                <div className="w-full max-w-6xl p-8 bg-[#1a202c] rounded-lg shadow-2xl border border-gray-700">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-3xl font-bold text-gray-800">Bem-vindo, {user?.name}!</h2>
+                        <h2 className="text-3xl font-bold text-white">Bem-vindo, {user?.name}!</h2>
                         <button onClick={onLogout} className="px-4 py-2 font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">
                             Sair
                         </button>
@@ -574,36 +573,36 @@
                     <CreateAlertForm token={token} onAlertCreated={handleAlertCreated} />
 
                     <div className="mt-8">
-                        <h3 className="text-2xl font-semibold mb-4 text-gray-700">Meus Alertas</h3>
+                        <h3 className="text-2xl font-semibold mb-4 text-gray-100">Meus Alertas</h3>
                         {alerts.length === 0 ? (
-                            <p className="text-gray-500">Você ainda não tem alertas.</p>
+                            <p className="text-gray-400">Você ainda não tem alertas.</p>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="min-w-full bg-white border border-gray-200">
-                                    <thead className="bg-gray-50">
+                                    <thead className="border-b border-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ativo</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alerta</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço Alvo</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ativo</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Alerta</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Preço Alvo</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ação</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200">
+                                    <tbody className="divide-y divide-gray-800">
                                         {alerts.map(alert => (
                                             <tr key={alert.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{alert.assetTicker}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-600 capitalize">{alert.tipo === 'compra' ? 'Preço Abaixo de' : 'Preço Acima de'}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-600">R$ {alert.preco_alvo.toFixed(2)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap font-medium text-white">{alert.assetTicker}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-300 capitalize">{alert.tipo === 'compra' ? 'Preço Abaixo de' : 'Preço Acima de'}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-300">R$ {alert.preco_alvo.toFixed(2)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        alert.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                                        alert.ativo ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-300'
                                                     }`}>
                                                         {alert.ativo ? 'Ativo' : 'Inativo'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <button onClick={() => handleDeleteAlert(alert.id)} className="text-red-600 hover:text-red-900">
+                                                    <button onClick={() => handleDeleteAlert(alert.id)} className="text-red-500 hover:text-red-400">
                                                         Excluir
                                                     </button>
                                                 </td>
@@ -675,8 +674,8 @@
             }
 
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-                    <h1 className="text-4xl font-bold text-gray-800 mb-2">Alerta de Ativos B3</h1>
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    <img src="/logo/alert-logo-ponto.png" alt="Alerta de Ativos Logo" className="w-48 mb-2" />
                     <p className="text-gray-600 mb-8">Monitore seus ativos e receba notificações.</p>
                     
                     {registerSuccess && view === 'login' && (
