@@ -427,28 +427,28 @@
             }
 
             return (
-                <div className="p-6 bg-white rounded-lg shadow-md mb-8">
-                    <h3 className="text-2xl font-semibold mb-4 text-black-200">Alertas Atuais</h3>
-                    {loading && Object.keys(prices).length === 0 ? <p className="text-gray-500">Buscando cotações...</p> : (
+                <div className="p-6 bg-transparent mb-8">
+                    <h3 className="text-2xl font-semibold mb-4 text-gray-100">Alertas Atuais</h3>
+                    {loading && Object.keys(prices).length === 0 ? <p className="text-gray-400">Buscando cotações...</p> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {Object.entries(prices).map(([ticker, price]) => {
                                 const prevPrice = previousPrices[ticker];
                                 const priceChange = prevPrice ? price - prevPrice : 0;
                                 
-                                let colorClass = 'text-gray-800';
+                                let colorClass = 'text-gray-200';
                                 let indicator = null;
 
                                 if (priceChange > 0) {
-                                    colorClass = 'text-green-600';
+                                    colorClass = 'text-green-400';
                                     indicator = <span className="ml-1">▲</span>;
                                 } else if (priceChange < 0) {
-                                    colorClass = 'text-red-600';
+                                    colorClass = 'text-red-400';
                                     indicator = <span className="ml-1">▼</span>;
                                 }
 
                                 return (
-                                    <div key={ticker} className="p-4 bg-gray-50 rounded-lg shadow-sm text-center transition-all duration-300 hover:shadow-md">
-                                        <p className="font-bold text-lg text-gray-900">{ticker}</p>
+                                    <div key={ticker} className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg shadow-sm text-center">
+                                        <p className="font-bold text-lg text-white">{ticker}</p>
                                         <p className={`text-2xl font-semibold ${colorClass} flex items-center justify-center`}>
                                             {price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                             {indicator}
