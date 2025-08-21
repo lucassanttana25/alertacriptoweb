@@ -354,7 +354,7 @@
                     <h3 className="text-xl font-semibold mb-4 text-gray-200">Criar Novo Alerta</h3>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div className="md:col-span-1">
-                            <label className="block text-sm font-medium text-gray-400">Ativo (ex: PETR4, BTC-USD)</label>
+                            <label className="block text-sm font-medium text-gray-400">Ativo (ex: PETR4, BBAS3)</label>
                             <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div className="md:col-span-1">
@@ -428,7 +428,7 @@
 
             return (
                 <div className="p-6 bg-white rounded-lg shadow-md mb-8">
-                    <h3 className="text-2xl font-semibold mb-4 text-gray-200">Cotações Atuais</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-gray-200">Alertas Atuais</h3>
                     {loading && Object.keys(prices).length === 0 ? <p className="text-gray-500">Buscando cotações...</p> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {Object.entries(prices).map(([ticker, price]) => {
