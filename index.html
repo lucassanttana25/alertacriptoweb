@@ -359,7 +359,7 @@
                         </div>
                         <div className="md:col-span-1">
                             <label className="block text-sm font-medium text-gray-400">Alerta</label>
-                            <select value={tipo} onChange={e => setTipo(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <select value={tipo} onChange={e => setTipo(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="compra">Preço Abaixo de</option>
                                 <option value="venda">Preço Acima de</option>
                             </select>
@@ -428,7 +428,7 @@
 
             return (
                 <div className="p-6 bg-white rounded-lg shadow-md mb-8">
-                    <h3 className="text-2xl font-semibold mb-4 text-gray-200">Alertas Atuais</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-black-200">Alertas Atuais</h3>
                     {loading && Object.keys(prices).length === 0 ? <p className="text-gray-500">Buscando cotações...</p> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {Object.entries(prices).map(([ticker, price]) => {
