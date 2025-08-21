@@ -6,7 +6,8 @@ import models
 import security
 from database import db
 from startup import create_indexes
-
+from worker import check_alerts # Importa a função do worker
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # Inicialização da aplicação FastAPI
 app = FastAPI(
     title="API de Alertas de Ativos B3",
@@ -21,6 +22,12 @@ async def startup_event():
     Executa tarefas na inicialização da API.
     """
     await create_indexes()
+    # 2. Inicia o worker como uma tarefa em segundo plano
+    scheduler = AsyncIOScheduler()
+    # Executa a verificação a cada 1 minuto
+    scheduler.add_job(check_alerts, 'interval', minutes=1)
+    scheduler.start()
+    print("Worker de alertas (monitoramento) iniciado em segundo plano.")
 
 # --- CONFIGURAÇÃO DO CORS ---
 origins = ["*"]
@@ -48,7 +55,7 @@ app.include_router(reports.router, prefix="/reports", tags=["Relatórios"])
 @app.get("/", summary="Rota raiz da API", tags=["Status"])
 async def root():
     """Verifica o status da API."""
-    return {"status": "ok", "message": "Bem-vindo à API de Alertas de Ativos da B3"}
+    return {"status": "ok", "message": "Bem-vindo à Alerts."}
 
 @app.get("/users/me", response_model=models.UserPublic, summary="Obter informações do usuário logado", tags=["Usuários"])
 async def read_users_me(current_user: models.UserInDB = Depends(security.get_current_user)):
