@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 # Importa a função de envio de e-mail de alerta
 from email_service import send_alert_triggered_email
+from database import redis_client
 
 load_dotenv()
 
@@ -121,6 +122,11 @@ async def check_alerts():
                 {"_id": alert_id},
                 {"$set": {"ativo": False}}
             )
+
+            if redis_client:
+                cache_key = f"alerts:{str(user_id)}"
+                redis_client.delete(cache_key)
+                print(f"Cache invalidado para o utilizador {user_id} após alerta disparado.")
 
 async def main():
     scheduler = AsyncIOScheduler()
