@@ -588,14 +588,6 @@
                 fetchInitialData();
             }, [token, fetchAlerts, onLogout]);
 
-            if (loading) return <div className="text-center">Carregando...</div>;
-            React.useEffect(() => {
-                // Define um intervalo para chamar fetchAlerts a cada 30 segundos
-                const intervalId = setInterval(() => {
-                    console.log("Atualizando lista de alertas...");
-                    fetchAlerts();
-                }, 30000); 
-
                 return () => clearInterval(intervalId);
             }, [fetchAlerts]);
 
