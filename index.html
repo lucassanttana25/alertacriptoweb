@@ -47,6 +47,19 @@
             animation-play-state: paused;
         }
     </style>
+    <script>
+        // Adicionando cores customizadas ao Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-yellow': '#fbcb04',
+                        'custom-yellow-dark': '#EAB308', // Tom mais escuro para hover
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div id="root"></div>
@@ -91,28 +104,28 @@
                     <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="text-sm font-medium text-gray-400">Email</label>
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                            <label className="text-sm font-medium text-white">Email</label>
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-yellow focus:border-custom-yellow" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-gray-400">Senha</label>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                            <label className="text-sm font-medium text-white">Senha</label>
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-yellow focus:border-custom-yellow" />
                         </div>
                         <div className="text-sm">
-                            <button type="button" onClick={showForgotPassword} className="font-medium text-indigo-600 hover:underline">
+                            <button type="button" onClick={showForgotPassword} className="font-medium text-custom-yellow-dark hover:underline">
                                 Esqueceu a senha?
                             </button>
                         </div>
                         {error && <p className="text-sm text-red-600">{error}</p>}
                         <div>
-                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-black bg-custom-yellow rounded-md hover:bg-custom-yellow-dark disabled:opacity-50">
                                 {loading ? 'Entrando...' : 'Entrar'}
                             </button>
                         </div>
                     </form>
                     <p className="text-sm text-center text-gray-600">
                         Não tem uma conta?{' '}
-                        <button onClick={showRegister} className="font-medium text-indigo-600 hover:underline">
+                        <button onClick={showRegister} className="font-medium text-custom-yellow-dark hover:underline">
                             Cadastre-se
                         </button>
                     </p>
@@ -355,21 +368,21 @@
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div className="md:col-span-1">
                             <label className="block text-sm font-medium text-gray-400">Ativo (ex: PETR4, BBAS3)</label>
-                            <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow" />
                         </div>
                         <div className="md:col-span-1">
                             <label className="block text-sm font-medium text-gray-400">Alerta</label>
-                            <select value={tipo} onChange={e => setTipo(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 text-white bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo">
+                            <select value={tipo} onChange={e => setTipo(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow">
                                 <option value="compra">Preço Abaixo de</option>
                                 <option value="venda">Preço Acima de</option>
                             </select>
                         </div>
                         <div className="md:col-span-1">
                              <label className="block text-sm font-medium text-gray-400">Preço Alvo</label>
-                            <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow" />
                         </div>
                         <div className="md:col-span-1">
-                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                            <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-black bg-custom-yellow rounded-md hover:bg-custom-yellow-dark disabled:opacity-50">
                                 {loading ? 'Criando...' : 'Criar Alerta'}
                             </button>
                         </div>
@@ -676,7 +689,7 @@
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center p-4">
                     <img src="/logo/alert-logo-etiqueta-menor.png" alt="Alerta de Ativos Logo" className="w-48 mb-2" />
-                    <p className="text-gray-600 mb-8">Monitore seus ativos e receba notificações.</p>
+                    <p className="text-white mb-8">Monitore seus ativos e receba notificações.</p>
                     
                     {registerSuccess && view === 'login' && (
                         <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-md text-center">
