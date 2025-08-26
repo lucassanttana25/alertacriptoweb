@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alert.</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body { background-color: #111827; }
+        body {
+            background-color: #111827;
+        }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-    
+
         const API_URL = 'https://alertacriptoweb.onrender.com';
 
         function HistoryPage() {
@@ -63,17 +67,21 @@
             }, [token]);
 
             if (loading) {
-                return <div className="min-h-screen flex items-center justify-center text-white text-xl">A carregar histórico...</div>;
+                return <div class="d-flex justify-content-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Carregando...</span>
+                    </div>
+                </div>
             }
 
             return (
                 <div className="min-h-screen flex flex-col items-center p-4 sm:p-8">
-                    <img src="/logo/alert-logo-etiqueta-menor.png" alt="Alerta de Ativos Logo" className="w-48 mb-4" />
-                    
+                    <img src="/logo/alert-logo-etiqueta-menor.png" alt="Alert. Logo" className="w-48 mb-4" />
+
                     <div className="w-full max-w-4xl p-8 bg-[#1a202c] rounded-lg shadow-2xl border border-gray-700">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-3xl font-bold text-white">Histórico Alert.</h2>
-                            <a href="/index.html" className="px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                            <a href="/index.html" className="px-4 py-2 font-semibold text-white bg-yellow-600 rounded-md hover:bg-yellow-700">
                                 Voltar ao Painel
                             </a>
                         </div>
@@ -119,4 +127,5 @@
 
     </script>
 </body>
+
 </html>
