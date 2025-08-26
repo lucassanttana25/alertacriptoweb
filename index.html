@@ -574,12 +574,14 @@
                 <div className="w-full max-w-6xl p-8 bg-[#1a202c] rounded-lg shadow-2xl border border-gray-700">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-3xl font-bold text-white">Bem-vindo, {user?.name}!</h2>
-                        <button className="px-4 py-2 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
-                            <a href='historico.html'>Histórico</a>
-                        </button>
-                        <button onClick={onLogout} className="px-4 py-2 font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">
-                            Sair
-                        </button>
+                        <div>
+                            <a href="historico.html" className="px-4 py-2 mr-4 font-semibold text-black bg-yellow-200 rounded-md hover:bg-bg-yellow-400">
+                                Histórico
+                            </a>
+                            <button onClick={onLogout} className="px-4 py-2 font-semibold text-white bg-red-600 rounded-md hover:bg-red-700">
+                                Sair
+                            </button>
+                        </div>
                     </div>
                     
                     <TopAssetsTicker />
