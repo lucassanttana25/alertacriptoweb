@@ -14,10 +14,10 @@ modelo.fit(df[['Dia']], df['Valor'])
 dia_seguinte = np.array([[8]])
 previsao = modelo.predict(dia_seguinte)
 
-print(f'Previsão para o dia 8: {previsao[0][0]}')
+print(f'Previsão para o dia 8: {previsao[0]}')
 
 dias = np.append(dias, 8)
-valores = np.append(valores, previsao[0][0])
+valores = np.append(valores, previsao[0])
 
 plt.scatter(dias, valores, color='blue')
 plt.plot(dias,valores,color='red')
