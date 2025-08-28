@@ -25,31 +25,20 @@ async def get_current_prices(tickers: List[str]):
     
     latest_prices = {}
     try:
-        # Usamos auto_adjust=True para seguir as boas práticas da biblioteca
-        data = yf.download(tickers=yahoo_formatted_tickers, period='1d', progress=False, auto_adjust=True)
-        if data.empty:
-            return {}
-
-        # --- CORREÇÃO: Lógica robusta para extrair preços ---
-        close_prices = data['Close']
+        # Usamos yf.Tickers para lidar com um ou múltiplos ativos de forma consistente
+        data = yf.Tickers(" ".join(yahoo_formatted_tickers))
         
-        if isinstance(close_prices, pd.Series):
-            # Caso de um único ticker: o resultado é uma Series
-            price = close_prices.iloc[-1]
-            if price is not None and not math.isnan(price):
-                original_ticker = yahoo_formatted_tickers[0].replace(".SA", "")
-                latest_prices[original_ticker] = price
-        else: # pd.DataFrame
-            # Caso de múltiplos tickers: o resultado é um DataFrame
-            last_prices_row = close_prices.iloc[-1]
-            for ticker_col_name in last_prices_row.index:
-                price = last_prices_row[ticker_col_name]
+        for ticker_str in yahoo_formatted_tickers:
+            # Para cada ticker, obtemos o histórico do último dia
+            hist = data.tickers[ticker_str].history(period="1d", auto_adjust=True)
+            if not hist.empty:
+                # Pegamos o último preço de fecho disponível
+                price = hist['Close'].iloc[-1]
                 if price is not None and not math.isnan(price):
-                    original_ticker = ticker_col_name.replace(".SA", "")
+                    original_ticker = ticker_str.replace(".SA", "")
                     latest_prices[original_ticker] = price
 
     except Exception as e:
         print(f"Erro ao buscar preços na API: {e}")
-        # Retorna o que conseguiu encontrar, mesmo que alguns tickers falhem
     
     return latest_prices
