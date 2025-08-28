@@ -107,17 +107,9 @@ class PositionCreate(PositionBase):
     pass
 
 class PositionPublic(PositionBase):
-    id: str = Field(alias='_id')
+    id: str
     userId: str
     createdAt: datetime
-
-    @field_validator('id', 'userId', mode='before')
-    @classmethod
-    def convert_objectid_to_str(cls, v):
-        if isinstance(v, ObjectId):
-            return str(v)
-        return v
     
     class Config:
         from_attributes = True
-        populate_by_name = True

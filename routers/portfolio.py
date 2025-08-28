@@ -18,11 +18,18 @@ async def add_position(position: models.PositionCreate, current_user: models.Use
     position_doc['userId'] = current_user.id
     position_doc['createdAt'] = datetime.utcnow()
 
-    # Cria uma nova coleção 'positions' se ela não existir
     result = await db.positions.insert_one(position_doc)
     created_doc = await db.positions.find_one({"_id": result.inserted_id})
     
-    return models.PositionPublic.model_validate(created_doc)
+    # Constrói a resposta manualmente para garantir que o ID seja uma string.
+    return {
+        "id": str(created_doc["_id"]),
+        "userId": str(created_doc["userId"]),
+        "assetTicker": created_doc["assetTicker"],
+        "quantidade": created_doc["quantidade"],
+        "preco_compra": created_doc["preco_compra"],
+        "createdAt": created_doc["createdAt"],
+    }
 
 @router.get("", response_model=List[models.PositionPublic])
 async def get_portfolio(current_user: models.UserInDB = Depends(security.get_current_user)):
@@ -31,7 +38,19 @@ async def get_portfolio(current_user: models.UserInDB = Depends(security.get_cur
     """
     positions_cursor = db.positions.find({'userId': current_user.id})
     positions = await positions_cursor.to_list(length=None)
-    return [models.PositionPublic.model_validate(p) for p in positions]
+    
+    # Constrói a lista de resposta manualmente para garantir que os IDs sejam strings.
+    response_list = []
+    for doc in positions:
+        response_list.append({
+            "id": str(doc["_id"]),
+            "userId": str(doc["userId"]),
+            "assetTicker": doc["assetTicker"],
+            "quantidade": doc["quantidade"],
+            "preco_compra": doc["preco_compra"],
+            "createdAt": doc["createdAt"],
+        })
+    return response_list
 
 @router.delete("/{position_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_position(position_id: str, current_user: models.UserInDB = Depends(security.get_current_user)):
