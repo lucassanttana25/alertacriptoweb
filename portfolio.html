@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="shortcut icon" href="/logo/alert-logo-title.png" type="image/x-icon">
+
+    <style>
+        body { background-color: #111827; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-yellow': '#fbcb04',
+                        'custom-yellow-dark': '#EAB308',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+    
+        const API_URL = 'https://alertacriptoweb.onrender.com';
+
+        // --- Componente do Gráfico ---
+        function StockChart({ historicalData, prediction }) {
+            const chartRef = React.useRef(null);
+            const chartInstanceRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (chartRef.current && historicalData.length > 0) {
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                    }
+                    
+                    const ctx = chartRef.current.getContext('2d');
+                    
+                    const labels = historicalData.map(d => d.date);
+                    const prices = historicalData.map(d => d.price);
+                    
+                    // Prepara os dados da linha de tendência (regressão)
+                    const trendlineData = [prices[0], prediction];
+                    
+                    chartInstanceRef.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Preço de Fecho',
+                                    data: prices,
+                                    borderColor: '#60A5FA', // Azul
+                                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                                    fill: true,
+                                    tension: 0.1,
+                                },
+                                {
+                                    label: 'Tendência (Regressão)',
+                                    data: [
+                                        { x: labels[0], y: prices[0] },
+                                        { x: labels[labels.length - 1], y: prediction }
+                                    ],
+                                    borderColor: '#FBBF24', // Amarelo
+                                    borderDash: [5, 5],
+                                    fill: false,
+                                    tension: 0.1,
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { labels: { color: '#D1D5DB' } } },
+                            scales: {
+                                x: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                                y: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                            }
+                        }
+                    });
+                }
+            }, [historicalData, prediction]);
+
+            return <canvas ref={chartRef}></canvas>;
+        }
+
+        // --- Componente do Card de Ativo Individual ---
+        function AssetCard({ position, token, onRemove }) {
+            const [analysis, setAnalysis] = React.useState(null);
+            const [currentPrice, setCurrentPrice] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+
+            React.useEffect(() => {
+                const fetchAnalysis = async () => {
+                    try {
+                        const [analysisRes, priceRes] = await Promise.all([
+                            fetch(`${API_URL}/analysis/${position.assetTicker}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                            fetch(`${API_URL}/market/prices`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify([position.assetTicker])
+                            })
+                        ]);
+
+                        if (!analysisRes.ok || !priceRes.ok) throw new Error('Falha ao buscar dados do ativo.');
+                        
+                        const analysisData = await analysisRes.json();
+                        const priceData = await priceRes.json();
+                        
+                        setAnalysis(analysisData);
+                        setCurrentPrice(priceData[position.assetTicker]);
+                    } catch (error) {
+                        console.error(`Erro ao analisar ${position.assetTicker}:`, error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchAnalysis();
+            }, [position, token]);
+            
+            if (loading) {
+                return <div className="bg-gray-800 p-4 rounded-lg animate-pulse h-64"></div>;
+            }
+            
+            const custoTotal = position.quantidade * position.preco_compra;
+            const valorAtual = currentPrice ? position.quantidade * currentPrice : 0;
+            const lucroPrejuizo = valorAtual - custoTotal;
+            const lucroPrejuizoPercent = custoTotal > 0 ? (lucroPrejuizo / custoTotal) * 100 : 0;
+            const isProfit = lucroPrejuizo >= 0;
+
+            return (
+                <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6 shadow-lg">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 className="text-2xl font-bold text-white">{position.assetTicker}</h3>
+                            <p className="text-sm text-gray-400">{position.quantidade} ações a R$ {position.preco_compra.toFixed(2)}</p>
+                        </div>
+                        <button onClick={() => onRemove(position.id)} className="text-gray-500 hover:text-red-500 text-xl">&times;</button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-6">
+                        <div>
+                            <p className="text-xs text-gray-400 uppercase">Valor Atual</p>
+                            <p className="text-lg font-semibold text-white">{valorAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-400 uppercase">Lucro/Prejuízo</p>
+                            <p className={`text-lg font-semibold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                                {lucroPrejuizo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                        </div>
+                         <div>
+                            <p className="text-xs text-gray-400 uppercase">Performance</p>
+                            <p className={`text-lg font-semibold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                                {lucroPrejuizoPercent.toFixed(2)}%
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-400 uppercase">Previsão (Próx. Dia)</p>
+                            <p className="text-lg font-semibold text-yellow-400">
+                                {analysis ? analysis.prediction.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A'}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {analysis && <StockChart historicalData={analysis.historical_data} prediction={analysis.prediction} />}
+                </div>
+            );
+        }
+        
+        // --- Componente Principal da Página de Portfólio ---
+        function PortfolioPage() {
+            const [user, setUser] = React.useState(null);
+            const [positions, setPositions] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            const token = localStorage.getItem('authToken');
+            
+            // Estados para o formulário
+            const [ticker, setTicker] = React.useState('');
+            const [quantity, setQuantity] = React.useState('');
+            const [price, setPrice] = React.useState('');
+
+            const fetchPortfolio = async () => {
+                try {
+                    const response = await fetch(`${API_URL}/portfolio`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!response.ok) throw new Error('Falha ao buscar portfólio.');
+                    const data = await response.json();
+                    setPositions(data);
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            React.useEffect(() => {
+                if (!token) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+                const fetchInitialData = async () => {
+                    try {
+                        const userResponse = await fetch(`${API_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        if (!userResponse.ok) throw new Error('Sessão inválida.');
+                        const userData = await userResponse.json();
+                        setUser(userData);
+                        await fetchPortfolio();
+                    } catch (error) {
+                        console.error(error);
+                        localStorage.removeItem('authToken');
+                        window.location.href = '/index.html';
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchInitialData();
+            }, [token]);
+
+            const handleAddPosition = async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch(`${API_URL}/portfolio`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                            assetTicker: ticker,
+                            quantidade: parseInt(quantity),
+                            preco_compra: parseFloat(price)
+                        })
+                    });
+                    if (!response.ok) throw new Error('Falha ao adicionar posição.');
+                    // Limpa o formulário e recarrega a lista
+                    setTicker(''); setQuantity(''); setPrice('');
+                    fetchPortfolio();
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+            
+            const handleRemovePosition = async (positionId) => {
+                try {
+                    const response = await fetch(`${API_URL}/portfolio/${positionId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) throw new Error('Falha ao remover posição.');
+                    // Recarrega a lista
+                    fetchPortfolio();
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            if (loading) {
+                return <div className="min-h-screen flex items-center justify-center text-white text-xl">A carregar portfólio...</div>;
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col items-center p-4 sm:p-8">
+                    <img src="/logo/alert-logo-ponto.png" alt="Alerta de Ativos Logo" className="w-48 mb-4" />
+                    
+                    <div className="w-full max-w-6xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-3xl font-bold text-white">Meu Portfólio</h2>
+                            <a href="/index.html" className="px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                                Voltar ao Painel
+                            </a>
+                        </div>
+
+                        {/* Formulário de Adição */}
+                        <div className="p-6 bg-gray-900/50 rounded-lg shadow-inner mb-8 border border-gray-700">
+                            <h3 className="text-xl font-semibold mb-4 text-gray-200">Adicionar Ativo à Carteira</h3>
+                            <form onSubmit={handleAddPosition} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400">Ativo</label>
+                                    <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} required placeholder="PETR4" className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400">Quantidade</label>
+                                    <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} required placeholder="100" className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400">Preço de Compra (R$)</label>
+                                    <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required placeholder="30.50" className="mt-1 block w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow" />
+                                </div>
+                                <div>
+                                    <button type="submit" className="w-full px-4 py-2 font-semibold text-black bg-custom-yellow rounded-md hover:bg-custom-yellow-dark disabled:opacity-50">
+                                        + Adicionar Posição
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        {/* Aviso Legal */}
+                        <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
+                            <strong className="font-bold">Aviso: </strong>
+                            <span className="block sm:inline">As previsões são baseadas em modelos estatísticos e não constituem recomendação de investimento.</span>
+                        </div>
+
+                        {/* Grelha de Ativos */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {positions.map(pos => (
+                                <AssetCard key={pos.id} position={pos} token={token} onRemove={handleRemovePosition} />
+                            ))}
+                        </div>
+                        {positions.length === 0 && (
+                            <p className="text-gray-400 text-center py-8">A sua carteira está vazia. Adicione um ativo acima para começar a análise.</p>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<PortfolioPage />);
+
+    </script>
+</body>
+</html>

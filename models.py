@@ -96,3 +96,28 @@ class AlertaNovoPublic(BaseModel):
 
 class Dispositivo(BaseModel):
     token: str
+
+# --- NOVOS MODELOS: Portfólio de Posições ---
+class PositionBase(BaseModel):
+    assetTicker: str = Field(..., example="PETR4")
+    quantidade: int = Field(..., gt=0, example=100)
+    preco_compra: float = Field(..., gt=0, example=30.50)
+
+class PositionCreate(PositionBase):
+    pass
+
+class PositionPublic(PositionBase):
+    id: str = Field(alias='_id')
+    userId: str
+    createdAt: datetime
+
+    @field_validator('id', 'userId', mode='before')
+    @classmethod
+    def convert_objectid_to_str(cls, v):
+        if isinstance(v, ObjectId):
+            return str(v)
+        return v
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True

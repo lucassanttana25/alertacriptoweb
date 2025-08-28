@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 # 1. Adiciona a importação do novo roteador
-from routers import authentication, alerts, password_recovery, market_data, reports, history
+from routers import authentication, alerts, password_recovery, market_data, reports, history, portfolio, analysis
 import models
 import security
 from database import db
@@ -46,12 +46,16 @@ app.add_middleware(
 app.include_router(authentication.router, prefix="/auth", tags=["Autenticação"])
 app.include_router(alerts.router, prefix="/alerts", tags=["Alertas"])
 app.include_router(password_recovery.router, prefix="/password", tags=["Recuperação de Senha"])
-# 2. Adiciona a nova rota de dados de mercado
+# Adiciona a nova rota de dados de mercado
 app.include_router(market_data.router, prefix="/market", tags=["Dados de Mercado"])
-# 3. Adiciona o novo roteador de relatórios
+# Adiciona o novo roteador de relatórios
 app.include_router(reports.router, prefix="/reports", tags=["Relatórios"])
 # Adiciona a nova rota de histórico
 app.include_router(history.router, prefix="/history", tags=["Histórico"])
+# Adiciona a nova rota de portfólio
+app.include_router(portfolio.router, prefix="/portfolio", tags=["Portfólio"])
+# 2. Adiciona a nova rota de análise
+app.include_router(analysis.router, prefix="/analysis", tags=["Análise"])
 
 @app.get("/", summary="Rota raiz da API", tags=["Status"])
 async def root():

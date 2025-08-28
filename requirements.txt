@@ -13,3 +13,5 @@ yfinance
 pandas
 redis
 apscheduler
+scikit-learn
+numpy
