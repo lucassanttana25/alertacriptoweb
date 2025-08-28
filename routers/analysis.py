@@ -26,31 +26,38 @@ async def get_asset_analysis(ticker: str, current_user: models.UserInDB = Depend
         # Formata o ticker para a API do Yahoo Finance
         yahoo_ticker = f"{ticker.upper()}.SA" if '-' not in ticker else ticker.upper()
         
-        # 1. Busca os dados históricos dos últimos 90 dias
         end_date = datetime.now()
         start_date = end_date - timedelta(days=90)
         
-        hist_data = yf.download(yahoo_ticker, start=start_date, end=end_date, progress=False)
+        # --- CORREÇÃO: Usar yf.Ticker para uma busca mais robusta e consistente ---
+        asset = yf.Ticker(yahoo_ticker)
+        hist_data = asset.history(start=start_date, end=end_date, auto_adjust=True)
         
         if hist_data.empty:
             raise HTTPException(status_code=404, detail="Não foi possível encontrar dados históricos para o ativo.")
 
-        # Prepara os dados para a regressão
+        # Garante que a coluna 'Date' existe e está no formato correto
         hist_data = hist_data.reset_index()
+        if 'Date' not in hist_data.columns and 'Datetime' in hist_data.columns:
+            hist_data = hist_data.rename(columns={'Datetime': 'Date'})
+        
+        if 'Date' not in hist_data.columns:
+            raise HTTPException(status_code=500, detail="Coluna de data não encontrada nos dados históricos.")
+
+        # Prepara os dados para a regressão
         hist_data['days_since_start'] = (hist_data['Date'] - hist_data['Date'].min()).dt.days
 
-        # 2. Calcula a Regressão Linear
         X = hist_data['days_since_start'].values.reshape(-1, 1)
         y = hist_data['Close'].values
 
         model = LinearRegression()
         model.fit(X, y)
 
-        # 3. Faz a previsão para o próximo dia
+        # Faz a previsão para o próximo dia
         next_day_index = hist_data['days_since_start'].max() + 1
         prediction = model.predict([[next_day_index]])[0]
 
-        # 4. Formata os dados históricos para enviar ao frontend (para o gráfico)
+        # Formata os dados históricos para enviar ao frontend
         historical_data_for_chart = []
         for index, row in hist_data.iterrows():
             historical_data_for_chart.append({
