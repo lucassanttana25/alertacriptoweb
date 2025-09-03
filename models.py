@@ -5,6 +5,11 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from bson import ObjectId
 from pydantic_core import core_schema
 
+class RiskProfileEnum(str, Enum):
+    CONSERVADOR = "conservador"
+    MODERADO = "moderado"
+    ARROJADO = "arrojado"
+
 # --- Modelo Auxiliar para ObjectId do Mongo ---
 class PyObjectId(ObjectId):
     @classmethod
@@ -49,6 +54,7 @@ class UserInDB(UserBase):
     hashed_password: str
     reset_token: Optional[str] = None
     reset_token_expires: Optional[datetime] = None
+    risk_profile: RiskProfileEnum = Field(default=RiskProfileEnum.CONSERVADOR)
 
     class Config:
         from_attributes = True
@@ -56,11 +62,14 @@ class UserInDB(UserBase):
 
 class UserPublic(UserBase):
     id: PyObjectId = Field(alias="_id")
-
+    risk_profile: Optional[RiskProfileEnum] = None
     class Config:
         from_attributes = True
         populate_by_name = True
 
+class RiskProfileUpdate(BaseModel):
+    risk_profile: RiskProfileEnum
+    
 # --- Modelos de Token ---
 class Token(BaseModel):
     access_token: str
