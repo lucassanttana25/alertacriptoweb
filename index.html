@@ -89,72 +89,58 @@
         const API_URL = 'https://alertacriptoweb.onrender.com';
 
         // --- Componentes da Interface ---
-        function RiskProfileManager({ token, initialProfile, onProfileUpdate }) {
-            const [profile, setProfile] = React.useState(initialProfile || 'conservador');
+        function DiscreetRiskProfile({ token, initialProfile, onProfileUpdate }) {
+            const [profile, setProfile] = React.useState(initialProfile);
             const [loading, setLoading] = React.useState(false);
-            const [message, setMessage] = React.useState('');
 
-            // Sincroniza o estado interno se o perfil inicial mudar
             React.useEffect(() => {
-                if (initialProfile) {
-                    setProfile(initialProfile);
-                }
+                setProfile(initialProfile);
             }, [initialProfile]);
 
-            const handleSave = async () => {
+            const handleProfileChange = async (e) => {
+                const newProfile = e.target.value;
+                setProfile(newProfile);
                 setLoading(true);
-                setMessage('');
                 try {
                     const response = await fetch(`${API_URL}/users/me/risk-profile`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ risk_profile: profile }),
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ risk_profile: newProfile }),
                     });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.detail || 'Erro ao salvar perfil');
-
                     onProfileUpdate(data.risk_profile);
-                    setMessage('Perfil salvo com sucesso!');
-                    setTimeout(() => setMessage(''), 3000);
                 } catch (err) {
-                    setMessage(`Erro: ${err.message}`);
+                    console.error("Erro ao atualizar perfil:", err);
+                    setProfile(initialProfile); // Reverte em caso de erro
                 } finally {
                     setLoading(false);
                 }
             };
+            
+            const profileStyles = {
+                conservador: 'text-blue-400 border-blue-400',
+                moderado: 'text-yellow-400 border-yellow-400',
+                arrojado: 'text-red-400 border-red-400',
+            };
 
-            const profileColor = {
-                conservador: 'text-blue-400',
-                moderado: 'text-yellow-400',
-                arrojado: 'text-red-400',
-            }[profile];
+            const selectedStyle = profileStyles[profile] || 'text-gray-400 border-gray-400';
+
+            if (!profile) return null;
 
             return (
-                <div className="p-6 bg-gray-900/50 rounded-lg shadow-inner border border-gray-700 mb-8">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-200">Seu Perfil de Investidor</h3>
-                    <div className="flex items-center space-x-4">
-                        <select
-                            value={profile}
-                            onChange={e => setProfile(e.target.value)}
-                            className="flex-grow px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-yellow focus:border-custom-yellow"
-                        >
-                            <option value="conservador">Conservador</option>
-                            <option value="moderado">Moderado</option>
-                            <option value="arrojado">Arrojado</option>
-                        </select>
-                        <button
-                            onClick={handleSave}
-                            disabled={loading}
-                            className="px-4 py-2 font-semibold text-black bg-custom-yellow rounded-md hover:bg-custom-yellow-dark disabled:opacity-50"
-                        >
-                            {loading ? 'Salvando...' : 'Salvar'}
-                        </button>
-                    </div>
-                    <p className="text-sm mt-3 text-gray-400">Seu perfil atual é: <span className={`font-bold ${profileColor}`}>{profile.charAt(0).toUpperCase() + profile.slice(1)}</span></p>
-                    {message && <p className={`text-sm mt-2 ${message.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>}
+                <div className="relative flex items-center">
+                    <span className="text-gray-400 mr-2">Perfil:</span>
+                    <select
+                        value={profile}
+                        onChange={handleProfileChange}
+                        disabled={loading}
+                        className={`appearance-none bg-transparent font-semibold border-b-2 p-0 focus:ring-0 focus:outline-none cursor-pointer ${selectedStyle}`}
+                    >
+                        <option value="conservador" className="text-black">Conservador</option>
+                        <option value="moderado" className="text-black">Moderado</option>
+                        <option value="arrojado" className="text-black">Arrojado</option>
+                    </select>
                 </div>
             );
         }
@@ -662,6 +648,11 @@
                 <div className="w-full max-w-6xl p-8 bg-[#1a202c] rounded-lg shadow-2xl border border-gray-700">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-3xl font-bold text-white">Bem-vindo, {user?.name}!</h2>
+                        <DiscreetRiskProfile 
+                                token={token} 
+                                initialProfile={user?.risk_profile} 
+                                onProfileUpdate={(newProfile) => setUser(prev => ({ ...prev, risk_profile: newProfile }))}
+                            />
                         <div>
                             <a href="portfolio.html" className="px-4 py-2 mr-4 font-semibold text-black bg-custom-yellow rounded-md hover:bg-custom-yellow-dark">
                                 Relatórios
@@ -674,15 +665,11 @@
                             </button>
                         </div>
                     </div>
-
+                    
                     <TopAssetsTicker />
 
                     <LivePrices alerts={alerts} token={token} />
-                    <RiskProfileManager
-                        token={token}
-                        initialProfile={user?.risk_profile}
-                        onProfileUpdate={(newProfile) => setUser(prev => ({ ...prev, risk_profile: newProfile }))}
-                    />
+                    
                     <CreateAlertForm token={token} onAlertCreated={handleAlertCreated} />
 
                     <div className="mt-8">
