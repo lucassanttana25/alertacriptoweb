@@ -15,3 +15,8 @@ redis
 apscheduler
 scikit-learn
 numpy
+tensorflow>=2.13.0
+statsmodels
+TA-Lib
+matplotlib
+seaborn

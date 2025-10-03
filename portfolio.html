@@ -139,12 +139,48 @@
             const lucroPrejuizoPercent = custoTotal > 0 ? (lucroPrejuizo / custoTotal) * 100 : 0;
             const isProfit = lucroPrejuizo >= 0;
 
+            // Informações do modelo de previsão
+            const modelInfo = analysis ? {
+                confidence: analysis.confidence || 0,
+                modelUsed: analysis.model_used || 'linear_regression',
+                allPredictions: analysis.all_predictions || {},
+                isAdvanced: analysis.model_used && analysis.model_used.includes('ensemble')
+            } : null;
+
+            const getModelDisplayName = (modelName) => {
+                const names = {
+                    'ensemble_advanced': 'Ensemble Avançado',
+                    'linear_regression_fallback': 'Regressão Linear',
+                    'random_forest': 'Random Forest',
+                    'lstm': 'LSTM Neural',
+                    'arima': 'ARIMA',
+                    'ensemble': 'Ensemble'
+                };
+                return names[modelName] || modelName;
+            };
+
+            const getConfidenceColor = (confidence) => {
+                if (confidence >= 0.7) return 'text-green-400';
+                if (confidence >= 0.4) return 'text-yellow-400';
+                return 'text-red-400';
+            };
+
             return (
                 <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6 shadow-lg">
                     <div className="flex justify-between items-start mb-4">
                         <div>
                             <h3 className="text-2xl font-bold text-white">{position.assetTicker}</h3>
                             <p className="text-sm text-gray-400">{position.quantidade} ações a R$ {position.preco_compra.toFixed(2)}</p>
+                            {modelInfo && (
+                                <div className="mt-1 flex items-center space-x-2">
+                                    <span className={`text-xs px-2 py-1 rounded ${modelInfo.isAdvanced ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'}`}>
+                                        {getModelDisplayName(modelInfo.modelUsed)}
+                                    </span>
+                                    <span className={`text-xs font-semibold ${getConfidenceColor(modelInfo.confidence)}`}>
+                                        {(modelInfo.confidence * 100).toFixed(0)}% confiança
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <button onClick={() => onRemove(position.id)} className="text-gray-500 hover:text-red-500 text-xl">&times;</button>
                     </div>
@@ -173,6 +209,21 @@
                             </p>
                         </div>
                     </div>
+
+                    {/* Informações detalhadas dos modelos */}
+                    {modelInfo && modelInfo.isAdvanced && Object.keys(modelInfo.allPredictions).length > 1 && (
+                        <div className="mb-4 p-3 bg-gray-800/50 rounded-lg">
+                            <h4 className="text-sm font-semibold text-gray-300 mb-2">Previsões por Modelo:</h4>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                {Object.entries(modelInfo.allPredictions).map(([model, pred]) => (
+                                    <div key={model} className="flex justify-between">
+                                        <span className="text-gray-400">{getModelDisplayName(model)}:</span>
+                                        <span className="text-white font-semibold">R$ {pred.toFixed(2)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     
                     {analysis && <StockChart historicalData={analysis.historical_data} prediction={analysis.prediction} />}
                 </div>
@@ -300,10 +351,24 @@
                             </form>
                         </div>
                         
-                        {/* Aviso Legal */}
-                        <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
-                            <strong className="font-bold">Aviso: </strong>
-                            <span className="block sm:inline">As previsões são baseadas em modelos estatísticos e não constituem recomendação de investimento.</span>
+                        {/* Aviso Legal Melhorado */}
+                        <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700 text-blue-200 px-6 py-4 rounded-lg relative mb-8" role="alert">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <strong className="font-bold">Sistema de Previsão Avançado: </strong>
+                                    <div className="text-sm mt-1">
+                                        <p>• Utiliza múltiplos modelos de IA (LSTM, Random Forest, ARIMA) para maior precisão</p>
+                                        <p>• Incorpora indicadores técnicos (RSI, MACD, Bollinger Bands) na análise</p>
+                                        <p>• As previsões não constituem recomendação de investimento</p>
+                                        <p>• Considere sempre sua tolerância ao risco e diversifique seus investimentos</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Grelha de Ativos */}
