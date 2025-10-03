@@ -5,7 +5,7 @@ from routers import authentication, alerts, password_recovery, market_data, repo
 from routers import user as user_router
 import models
 import security
-from database import db
+from database import db, ensure_redis_streams
 from startup import create_indexes
 from worker import check_alerts # Importa a função do worker
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -23,6 +23,10 @@ async def startup_event():
     Executa tarefas na inicialização da API.
     """
     await create_indexes()
+    
+    # Inicializa os streams Redis se necessário
+    await ensure_redis_streams()
+    
     # 2. Inicia o worker como uma tarefa em segundo plano
     scheduler = AsyncIOScheduler()
     # Executa a verificação a cada 1 minuto

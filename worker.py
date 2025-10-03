@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 # Importa a função de envio de e-mail de alerta
 from email_service import send_alert_triggered_email
-from database import redis_client
+from database import redis_client, safe_redis_delete, safe_redis_xadd
 
 load_dotenv()
 
@@ -123,31 +123,30 @@ async def check_alerts():
                 {"$set": {"ativo": False}}
             )
 
-            if redis_client:
-                cache_key = f"alerts:{str(user_id)}"
-                redis_client.delete(cache_key)
-                print(f"Cache invalidado para o utilizador {user_id} após alerta disparado.")
+            # Invalidação de cache com função segura
+            cache_key = f"alerts:{str(user_id)}"
+            if safe_redis_delete(cache_key):
+                print(f"✅ Cache invalidado para o utilizador {user_id} após alerta disparado.")
+            else:
+                print(f"⚠️  Não foi possível invalidar cache para o utilizador {user_id}")
             
             # --- LÓGICA DO REDIS STREAMS ---
             # Após disparar o alerta, adiciona um evento ao stream
-            if redis_client:
-                try:
-                    event_data = {
-                        'userId': str(user_id),
-                        'ticker': ticker,
-                        'tipo': tipo,
-                        'preco_alvo': str(target_price), # Converte para string para o Redis
-                        'preco_atual': str(current_price), # Converte para string para o Redis
-                        'timestamp': datetime.utcnow().isoformat()
-                    }
-                    
-                    # O comando XADD adiciona a entrada ao stream 'alertas_disparados'
-                    # O '*' gera um ID único baseado no tempo para o evento
-                    redis_client.xadd('alertas_disparados', event_data)
-                    print(f"Evento de alerta para {ticker} adicionado ao Redis Stream.")
-
-                except Exception as e:
-                    print(f"Erro ao adicionar evento ao Redis Stream: {e}")
+            event_data = {
+                'userId': str(user_id),
+                'ticker': ticker,
+                'tipo': tipo,
+                'preco_alvo': str(target_price), # Converte para string para o Redis
+                'preco_atual': str(current_price), # Converte para string para o Redis
+                'timestamp': datetime.utcnow().isoformat()
+            }
+            
+            # Usa função segura para adicionar ao stream
+            event_id = safe_redis_xadd('alertas_disparados', event_data)
+            if event_id:
+                print(f"✅ Evento de alerta para {ticker} adicionado ao Redis Stream: {event_id}")
+            else:
+                print(f"⚠️  Não foi possível adicionar evento ao Redis Stream para {ticker}")
 
 
 async def main():

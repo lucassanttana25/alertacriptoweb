@@ -13,9 +13,9 @@ yfinance
 pandas
 redis
 apscheduler
-scikit-learn
+scikit-learn>=1.0.0
 numpy
-tensorflow>=2.13.0
+tensorflow-cpu>=2.13.0
 statsmodels
 TA-Lib
 matplotlib

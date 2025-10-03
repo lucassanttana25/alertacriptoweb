@@ -6,8 +6,8 @@ import json
 
 import models
 import security
-# Importa o cliente Redis da nossa configuração
-from database import db, redis_client
+# Importa funções seguras do Redis da nossa configuração
+from database import db, redis_client, safe_redis_delete, safe_redis_get, safe_redis_set, rebuild_user_cache_from_mongo
 
 router = APIRouter()
 
@@ -33,10 +33,11 @@ async def criar_alerta(data: models.AlertaNovoCreate, current_user: models.UserI
 
     # --- CACHE: Invalidação ---
     # Após criar um novo alerta, removemos o cache antigo para forçar uma nova busca no banco e substituir.
-    if redis_client:
-        cache_key = f"alerts:{str(user_id)}"
-        redis_client.delete(cache_key)
+    cache_key = f"alerts:{str(user_id)}"
+    if safe_redis_delete(cache_key):
         print(f"Cache invalidado para o usuário: {user_id}")
+    else:
+        print(f"⚠️  Não foi possível invalidar cache para o usuário: {user_id}")
     
     # Constrói a resposta manualmente para garantir que o ID seja uma string.
     return {
@@ -53,17 +54,20 @@ async def ler_alertas_do_usuario(current_user: models.UserInDB = Depends(securit
     user_id = str(current_user.id)
     cache_key = f"alerts:{user_id}"
 
-    # --- CACHE: Leitura ---
-    if redis_client:
+    # --- CACHE: Leitura com reconstrução automática ---
+    cache_key = f"alerts:{user_id}"
+    cached_alerts = safe_redis_get(cache_key)
+    
+    if cached_alerts:
         try:
-            cached_alerts = redis_client.get(cache_key)
-            if cached_alerts:
-                print(f"Cache HIT para o usuário: {user_id}")
-                return json.loads(cached_alerts)
-        except Exception as e:
-            print(f"Erro ao acessar o cache Redis: {e}")
+            print(f"✅ Cache HIT para o usuário: {user_id}")
+            return json.loads(cached_alerts)
+        except json.JSONDecodeError as e:
+            print(f"⚠️  Cache corrompido para usuário {user_id}: {e}")
+            # Cache corrompido, remove e continua para buscar no MongoDB
+            safe_redis_delete(cache_key)
 
-    print(f"Cache MISS para o usuário: {user_id}. Buscando no MongoDB.")
+    print(f"🔄 Cache MISS para o usuário: {user_id}. Buscando no MongoDB.")
     alertas_cursor = db.alerts.find({'userId': current_user.id})
     alertas_db = await alertas_cursor.to_list(length=None)
     
@@ -81,14 +85,12 @@ async def ler_alertas_do_usuario(current_user: models.UserInDB = Depends(securit
         except KeyError:
             continue
     
-    # ---CACHE: Escrita ---
-    if redis_client:
-        try:
-            alerts_json = json.dumps(response_list, default=str)
-            redis_client.set(cache_key, alerts_json, ex=3600) # Expira em 1 hora
-            print(f"Cache populado para o usuário: {user_id}")
-        except Exception as e:
-            print(f"Erro ao salvar no cache Redis: {e}")
+    # --- CACHE: Escrita com verificação ---
+    alerts_json = json.dumps(response_list, default=str)
+    if safe_redis_set(cache_key, alerts_json, ex=3600):  # Expira em 1 hora
+        print(f"✅ Cache populado para o usuário: {user_id}")
+    else:
+        print(f"⚠️  Não foi possível salvar cache para o usuário: {user_id}")
             
     return response_list
 
@@ -106,9 +108,10 @@ async def deletar_alerta(alert_id: str, current_user: models.UserInDB = Depends(
         raise HTTPException(status_code=404, detail="Alerta não encontrado ou não pertence ao usuário.")
     
     # --- LÓGICA DE CACHE: Invalidação ---
-    if redis_client:
-        cache_key = f"alerts:{str(user_id)}"
-        redis_client.delete(cache_key)
-        print(f"Cache invalidado para o usuário: {user_id}")
+    cache_key = f"alerts:{str(user_id)}"
+    if safe_redis_delete(cache_key):
+        print(f"✅ Cache invalidado para o usuário: {user_id}")
+    else:
+        print(f"⚠️  Não foi possível invalidar cache para o usuário: {user_id}")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

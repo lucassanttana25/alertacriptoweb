@@ -1,0 +1,25 @@
+# Dependências principais para produção (sem TensorFlow)
+fastapi
+uvicorn[standard]
+motor
+pydantic[email]
+python-jose[cryptography]
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.0
+python-dotenv
+pymongo
+fastapi-mail
+python-multipart
+yfinance
+pandas
+redis
+apscheduler
+scikit-learn>=1.0.0
+numpy
+
+# Opcional para análise avançada (pode ser removido em caso de problemas)
+# statsmodels
+# TA-Lib
+
+# TensorFlow desabilitado para produção para evitar problemas CUDA
+# tensorflow-cpu>=2.13.0  # Versão CPU-only se necessário
